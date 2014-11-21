@@ -31,16 +31,33 @@ class EmsMicrosoft < EmsInfra
   end
 
   def connect(options = {})
+
+    $scvmm_log.info("#{__FILE__} connect #{options}")
     raise "no credentials defined" if self.authentication_invalid?(options[:auth_type])
+    # connection = find_provider_connection_by_component(options[:provider_component])
+    # $scvmm_log.info("connect returned #{connection.inspect}")
 
     username = options[:user] || authentication_userid(options[:auth_type])
     password = options[:pass] || authentication_password(options[:auth_type])
     ipaddress = options[:ipaddress] || self.ipaddress
     auth_url = self.class.auth_url(ipaddress, port)
+
+    $scvmm_log.info("ip : #{ipaddress}")
+    # $scvmm_log.info("port : #{connection.port}")
+    $scvmm_log.info("username : #{username}")
+    $scvmm_log.info("password : #{password}")
+
+    # auth_url = self.class.auth_url(connection.ipaddress, connection.port)
+    $scvmm_log.info("auth_url : #{auth_url}")
     self.class.raw_connect(username, password, auth_url)
+
+
+    # self.class.raw_connect(connection.username, connection.password, auth_url)
   end
 
-  def verify_credentials(_auth_type = nil, options = {})
+  def verify_credentials(auth_type = nil, options = {})
+    $scvmm_log.info("#{__FILE__} verify_credentials #{options}")
+
     raise MiqException::MiqHostError, "No credentials defined" if self.authentication_invalid?(options[:auth_type])
 
     begin

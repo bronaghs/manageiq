@@ -138,6 +138,7 @@ module EmsCommon
   def new
     assert_privileges("#{@model.to_s.underscore}_new")
     @ems = @model.new
+    $scvmm_log.info("NEW EMS #{@ems.inspect}")
     set_form_vars
     @in_a_form = true
     session[:changed] = nil
@@ -551,6 +552,7 @@ module EmsCommon
 
   # Set form variables for edit
   def set_form_vars
+    $scvmm_log.info("set_form_vars EMS #{@ems.id}")
 
     @edit = Hash.new
     @edit[:ems_id] = @ems.id
@@ -560,8 +562,13 @@ module EmsCommon
 
     @edit[:new][:name] = @ems.name
     @edit[:new][:provider_region] = @ems.provider_region
+    $scvmm_log.info("set_form_vars hostname #{@ems.hostname}")
+
     @edit[:new][:hostname] = @ems.hostname
+        $scvmm_log.info("set_form_vars before ip")
+
     @edit[:new][:ipaddress] = @ems.ipaddress
+    $scvmm_log.info("set_form_vars past ip")
     @edit[:new][:emstype] = @ems.emstype
     @edit[:amazon_regions] = get_amazon_regions if @ems.emstype == "ec2"
     @edit[:new][:port] = @ems.port
@@ -575,6 +582,11 @@ module EmsCommon
     zones.each do |zone|
       @edit[:server_zones].push([zone.description, zone.name])
     end
+
+    # $scvmm_log.info("@edit #{@edit.inspect}")
+    # $scvmm_log.info("AUTH USERID #{@ems.authentication_userid}")
+    #       $scvmm_log.info("AUTH PWD #{@ems.authentication_password}")
+
 
     @edit[:new][:default_userid] = @ems.authentication_userid
     @edit[:new][:default_password] = @ems.authentication_password
@@ -670,6 +682,7 @@ module EmsCommon
     if ems.emstype == "openstack" && !@edit[:new][:amqp_userid].blank?
       creds[:amqp] = {:userid => @edit[:new][:amqp_userid], :password => @edit[:new][:amqp_password]}
     end
+
     ems.update_authentication(creds, {:save=>(mode != :validate)})
   end
 
