@@ -1,7 +1,9 @@
 
 module EmsRefresh::Parsers
   class Scvmm < Infra
-    INVENTORY_SCRIPT = File.join(File.dirname(__FILE__), 'ps_scripts/get_inventory.ps1')
+    VM_INVENTORY_SCRIPT = File.join(File.dirname(__FILE__), 'ps_scripts/get_inventory.ps1')
+    INVENTORY_SCRIPT = File.join(File.dirname(__FILE__), 'ps_scripts/get_all_but_vms.ps1')
+
     DRIVE_LETTER     = /\A[a-z][:]/i
 
     def self.ems_inv_to_hashes(ems, options = nil)
@@ -19,6 +21,11 @@ module EmsRefresh::Parsers
     def ems_inv_to_hashes
       log_header = "MIQ(#{self.class.name}.#{__method__}) Collecting data for EMS name: [#{@ems.name}] id: [#{@ems.id}]"
       $scvmm_log.info("#{log_header}...")
+      @vm_inventory = EmsMicrosoft.execute_powershell(@connection, VM_INVENTORY_SCRIPT).first
+      if @vm_inventory.empty?
+        $scvmm_log.warn("#{log_header}...Empty VM inventory set returned from SCVMM.")
+        return
+      end
       @inventory = EmsMicrosoft.execute_powershell(@connection, INVENTORY_SCRIPT).first
       if @inventory.empty?
         $scvmm_log.warn("#{log_header}...Empty inventory set returned from SCVMM.")
@@ -61,7 +68,7 @@ module EmsRefresh::Parsers
     end
 
     def get_vms
-      vms = @inventory[:vms]
+      vms = @vm_inventory[:vms]
       process_collection(vms, :vms) { |vm| parse_vm(vm) }
     end
 
@@ -132,11 +139,14 @@ module EmsRefresh::Parsers
     end
 
     def parse_vm(vm)
-      p                = vm[:Properties][:Props]
-      uid              = p[:ID]
-      connection_state = p[:ServerConnection][:Props][:IsConnected].to_s
-      host             = @data_index.fetch_path(:hosts_by_host_name, p[:HostName])
+      p                = vm[:Properties]
 
+      $scvmm_log.info("VM Properties: #{vm[:Properties].keys}")
+
+      uid              = p[:ID]
+      connection_state = p[:ServerConnection].to_s
+
+      host             = @data_index.fetch_path(:hosts_by_host_name, p[:HostName])
       new_result = {
         :name             => p[:Name],
         :ems_ref          => uid,
@@ -144,7 +154,6 @@ module EmsRefresh::Parsers
         :type             => 'VmMicrosoft',
         :vendor           => "microsoft",
         :raw_power_state  => p[:VirtualMachineState][:ToString],
-        :location         => p[:VMCPath].sub(DRIVE_LETTER, "").strip,
         :operating_system => process_vm_os(p[:OperatingSystem]),
         :connection_state => lookup_connected_state(connection_state),
         :tools_status     => process_tools_status(p),
@@ -156,11 +165,14 @@ module EmsRefresh::Parsers
         :storage          => process_vm_storage(p[:VMCPath], host),
         :storages         => process_vm_storages(p),
       }
+      new_result[:location] = p[:VMCPath].sub(DRIVE_LETTER, "").strip unless p[:VMCPath].nil?
+
+      $scvmm_log.info("VM result location #{ new_result[:location]}")
       return uid, new_result
     end
 
     def parse_image(image)
-      p               = image[:Properties][:Props]
+      p               = image[:Properties]
       uid             = p[:ID]
 
       new_result = {
@@ -263,7 +275,7 @@ module EmsRefresh::Parsers
     end
 
     def process_vm_hardware(vm)
-      p = vm[:Properties][:Props]
+      p = vm[:Properties]
 
       {
         :numvcpus           => p[:CPUCount],
@@ -280,7 +292,7 @@ module EmsRefresh::Parsers
 
     def process_snapshots(p)
       result = []
-      last_restored_snapshot = p[:LastRestoredVMCheckpoint]
+
       p[:VMCheckpoints].each do |snapshot_hash|
         s = snapshot_hash[:Props]
         new_result = {
@@ -291,7 +303,7 @@ module EmsRefresh::Parsers
           :name        => s[:Name],
           :description => s[:description],
           :create_time => s[:AddedTime],
-          :current     => s[:CheckpointID] == last_restored_snapshot[:Props][:CheckpointID],
+          :current     => current_snapshot?(s[:CheckpointID], p)
         }
         result << new_result
       end
@@ -299,11 +311,21 @@ module EmsRefresh::Parsers
       result
     end
 
+    def current_snapshot?(snapshot_id, vm)
+      $scvmm_log.info("#{__FILE__} #{__method__} VM #{vm.keys} snapshot_id #{snapshot_id}")
+
+      return false if vm[:LastRestoredVMCheckpoint].nil?
+
+      $scvmm_log.info("#{__FILE__} #{__method__} vm[:LastRestoredVMCheckpoint][:Props][:CheckpointID] #{vm[:LastRestoredVMCheckpoint][:Props][:CheckpointID]}")
+      snapshot_id == vm[:LastRestoredVMCheckpoint][:Props][:CheckpointID]
+
+    end
+
     def process_hostname_and_ip(vm)
       [
         {
-          :hostname  => process_computer_name(vm[:Properties][:Props][:ComputerName]),
-          :ipaddress => vm[:Networks]
+          :hostname  => process_computer_name(vm[:Properties][:ComputerName]),
+          :ipaddress => vm[:Properties][:Networks]
         }
       ]
     end
@@ -341,7 +363,7 @@ module EmsRefresh::Parsers
     end
 
     def process_vm_guest_devices(vm)
-      dvds = vm[:Properties][:Props][:VirtualDVDDrives]
+      dvds = vm[:Properties][:VirtualDVDDrives]
       return [] if dvds.empty?
 
       dvdprops   = dvds[0][:Props]
