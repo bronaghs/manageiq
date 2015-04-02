@@ -11,6 +11,7 @@ function get_vms{
   $vm_props["ComputerName"] = $_.ComputerName
   $vm_props["ID"] = $_.ID
   $vm_props["ServerConnection"] = $_.ServerConnection.IsConnected
+  $vm_props["HostName"] = $_.HostName
   $vm_props["VirtualMachineState"]  = $_.VirtualMachineState
   $vm_props["OperatingSystem"]  = $_.OperatingSystem
   $vm_props["VMCPath"] = $_.VMCPath
