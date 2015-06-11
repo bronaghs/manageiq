@@ -14,11 +14,7 @@ module EmsRefresh::Parsers
       @data_index      = {}
       @known_flavors   = Set.new
 
-      @options    = options || {}
-      # Default the collection of images unless explicitly declined
-      @options["get_private_images"] = true  unless @options.has_key?("get_private_images")
-      @options["get_shared_images"]  = true  unless @options.has_key?("get_shared_images")
-      @options["get_public_images"]  = false unless @options.has_key?("get_public_images")
+      @options = options || {}
     end
 
     def ems_inv_to_hashes
