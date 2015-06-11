@@ -12,6 +12,7 @@ module EmsRefresh::Refreshers
       group_targets_by_ems(targets)
     end
 
+    # Get config information from the config/vmdb.yml file.
     def options
       return @options if defined?(@options)
       @options = VMDB::Config.new("vmdb").config[:ems_refresh]
