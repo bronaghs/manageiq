@@ -95,12 +95,14 @@ module AuthenticationMixin
       current = {:new => nil, :old => nil}
 
       if value[:auth_key]
-        # TODO(lsmola) figure out if there is a better way. Password field is replacing \n with \s, I need to replace
-        # them back
-        fixed_auth_key = value[:auth_key].gsub(/-----BEGIN\sRSA\sPRIVATE\sKEY-----/, '')
-        fixed_auth_key = fixed_auth_key.gsub(/-----END\sRSA\sPRIVATE\sKEY-----/, '')
-        fixed_auth_key = fixed_auth_key.gsub(/\s/, "\n")
-        value[:auth_key] = '-----BEGIN RSA PRIVATE KEY-----' + fixed_auth_key + '-----END RSA PRIVATE KEY-----'
+        unless cred.is_a?(AuthAzure)
+          # TODO(lsmola) figure out if there is a better way. Password field is replacing \n with \s, I need to replace
+          # them back
+          fixed_auth_key = value[:auth_key].gsub(/-----BEGIN\sRSA\sPRIVATE\sKEY-----/, '')
+          fixed_auth_key = fixed_auth_key.gsub(/-----END\sRSA\sPRIVATE\sKEY-----/, '')
+          fixed_auth_key = fixed_auth_key.gsub(/\s/, "\n")
+          value[:auth_key] = '-----BEGIN RSA PRIVATE KEY-----' + fixed_auth_key + '-----END RSA PRIVATE KEY-----'
+        end
       end
 
       unless value[:userid].blank?
@@ -129,6 +131,16 @@ module AuthenticationMixin
           cred = AuthKeyPairOpenstackInfra.new(:name => "#{self.class.name} #{self.name}", :authtype => type.to_s,
                                                :resource_id => id, :resource_type => "ExtManagementSystem")
           self.authentications << cred
+        elsif self.kind_of?(EmsAzure)
+          cred = self.authentications.build(
+            :name => "#{self.class.name} #{self.name}",
+            :authtype => type.to_s,
+            :type => "AuthAzure",
+            :client_id => current[:userid],
+            :client_key => current[:password],
+            :tenant_id => current[:auth_key]
+          )
+          $ems.log("#{__FILE__} #{__method__} #{cred.inspect}")
         else
           cred = self.authentications.build(:name => "#{self.class.name} #{self.name}", :authtype => type.to_s,
                                             :type => "AuthUseridPassword")
