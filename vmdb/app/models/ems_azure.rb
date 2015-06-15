@@ -8,9 +8,9 @@ class EmsAzure < EmsCloud
     @description ||= "Azure".freeze
   end
 
-  # def self.hostname_required?
-  #   false
-  # end
+  def self.hostname_required?
+    false
+  end
 
   def self.raw_connect(clientid, clientkey, tenantid)
     $log.info("#{__FILE__} #{__method__} params clientid: #{clientid} clientkey: #{clientkey} tenantid: #{tenantid} ")
