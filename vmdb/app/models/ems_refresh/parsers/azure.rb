@@ -26,8 +26,8 @@ module EmsRefresh::Parsers
 
     private
 
-
     def get_vms
+      log_header = "MIQ(#{self.class.name}.#{__method__})"
       $log.info("#{log_header} #{__method__}")
 
       vms = @connection.get_vms
