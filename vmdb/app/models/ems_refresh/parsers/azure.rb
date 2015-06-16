@@ -7,9 +7,10 @@ module EmsRefresh::Parsers
     end
 
     def initialize(ems, options = nil)
-      @ems             = ems
-      @connection      = ems.connect
-      @options = options || {}
+      @ems        = ems
+      @connection = ems.connect
+      @options    = options || {}
+      @data       = {}
     end
 
     def ems_inv_to_hashes
@@ -82,6 +83,7 @@ module EmsRefresh::Parsers
     end
 
     def parse_vm(instance)
+      log_header = "MIQ(#{self.class.name}.#{__method__})"
       $log.info("#{log_header} #{__method__}")
 
       status = instance.status
