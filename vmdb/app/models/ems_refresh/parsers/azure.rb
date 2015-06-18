@@ -107,9 +107,9 @@ module EmsRefresh::Parsers
 
       new_result = {
         :type            => vm['type']
-        :uid_ems         => vm['id']
-        :ems_ref         => vm['id']
-        :name            => vm['name']
+        :uid_ems         => vm['id'],
+        :ems_ref         => vm['id'],
+        :name            => vm['name'],
         :vendor          => "Microsoft",
         :raw_power_state => vm['instanceView']['powerState'],
         :hardware        => parse_vm_hardware(vm),
