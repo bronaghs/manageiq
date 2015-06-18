@@ -51,7 +51,7 @@ module EmsRefresh::Parsers
         :size                 => hardware['size'],
         :deployment_name      => hardware['deploymentName'],
         :deployment_id        => hardware['deploymentId'],
-        :deployment_label     => hardware['deploymentLabel']
+        :deployment_label     => hardware['deploymentLabel'],
         :deployment_locked    => hardware['deploymentLocked']
       }
     end
@@ -60,14 +60,14 @@ module EmsRefresh::Parsers
       storage = vm['properties']['storageProfile']['operatingSystemDisk']
 
       {
-        :disk_name        = storage['diskName']
+        :disk_name        = storage['diskName'],
         :caching          = storage['caching'],
         :operating_system = storage['operatingSystem'],
         :io_type          = storage['ioType'],
         :image_name       = storage['sourceImageName'],
-        :vhd_uri          = storage['vhdUri']
-        :id               = storage['storageAccount']['id']
-        :name             = storage['storageAccount']['name']
+        :vhd_uri          = storage['vhdUri'],
+        :id               = storage['storageAccount']['id'],
+        :name             = storage['storageAccount']['name'],
         :type             = storage['storageAccount']['type']
       }
     end
