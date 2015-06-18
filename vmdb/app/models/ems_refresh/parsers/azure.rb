@@ -60,15 +60,15 @@ module EmsRefresh::Parsers
       storage = vm['properties']['storageProfile']['operatingSystemDisk']
 
       {
-        :disk_name        = storage['diskName'],
-        :caching          = storage['caching'],
-        :operating_system = storage['operatingSystem'],
-        :io_type          = storage['ioType'],
-        :image_name       = storage['sourceImageName'],
-        :vhd_uri          = storage['vhdUri'],
-        :id               = storage['storageAccount']['id'],
-        :name             = storage['storageAccount']['name'],
-        :type             = storage['storageAccount']['type']
+        :disk_name        => storage['diskName'],
+        :caching          => storage['caching'],
+        :operating_system => storage['operatingSystem'],
+        :io_type          => storage['ioType'],
+        :image_name       => storage['sourceImageName'],
+        :vhd_uri          => storage['vhdUri'],
+        :id               => storage['storageAccount']['id'],
+        :name             => storage['storageAccount']['name'],
+        :type             => storage['storageAccount']['type']
       }
     end
 
