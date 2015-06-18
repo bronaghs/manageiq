@@ -56,6 +56,45 @@ module EmsRefresh::Parsers
       }
     end
 
+    def process_vm_storage(vm)
+      storage = vm['properties']['storageProfile']['operatingSystemDisk']
+
+      {
+        :disk_name        = storage['diskName']
+        :caching          = storage['caching'],
+        :operating_system = storage['operatingSystem'],
+        :io_type          = storage['ioType'],
+        :image_name       = storage['sourceImageName'],
+        :vhd_uri          = storage['vhdUri']
+        :id               = storage['storageAccount']['id']
+        :name             = storage['storageAccount']['name']
+        :type             = storage['storageAccount']['type']
+      }
+    end
+
+    def parse_vm_network(vm)
+      vm['properties']['networkProfile']['inputEndpoints'].collect do |n|
+        {
+          :name     => n['endpointName'],
+          :port     => n['publicPort'],
+          :protocol => n['protocol'],
+        }
+      end
+    end
+
+    def parse_vm_extensions(vm)
+      vm['properties']['extensions'].collect do |ext|
+        {
+          :extension  => ext['extension'],
+          :publisher  => ext['publisher'],
+          :version    => ext['version'],
+          :state      => ext['state'],
+          :name       => ext['referenceName'],
+          :parameters => ext['parameters']
+        }
+      end
+    end
+
     # Parse a VM instance, where +instance+ is a hash of values returned by
     # the VirtualMachineManager#list method.
     #
@@ -64,6 +103,8 @@ module EmsRefresh::Parsers
       $log.info("#{log_header} #{__method__}")
       $log.info(instance)
 
+      uid = vm['id']
+
       new_result = {
         :type            => vm['type']
         :uid_ems         => vm['id']
@@ -71,7 +112,10 @@ module EmsRefresh::Parsers
         :name            => vm['name']
         :vendor          => "Microsoft",
         :raw_power_state => vm['instanceView']['powerState'],
-        :hardware        => parse_hardware(vm)
+        :hardware        => parse_vm_hardware(vm),
+        :storage         => parse_vm_storage(vm),
+        :network         => parse_vm_network(vm),
+        :extensions      => parse_vm_extensions(vm)
       }
 
       return uid, new_result
