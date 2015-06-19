@@ -106,7 +106,7 @@ module EmsRefresh::Parsers
       uid = vm['id']
 
       new_result = {
-        :type            => vm['type']
+        :type            => vm['type'],
         :uid_ems         => vm['id'],
         :ems_ref         => vm['id'],
         :name            => vm['name'],
