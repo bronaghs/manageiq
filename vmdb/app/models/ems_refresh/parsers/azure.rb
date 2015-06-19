@@ -36,8 +36,12 @@ module EmsRefresh::Parsers
     def process_collection(collection, key)
       @data[key] ||= []
 
+      return if collection.nil?
+
       collection.each do |item|
+        uid, new_result = yield(item)
         @data[key] << item
+        @data_index.store_path(key, uid, new_result)
       end
     end
 
@@ -72,7 +76,7 @@ module EmsRefresh::Parsers
       }
     end
 
-    def parse_vm_network(vm)
+    def process_vm_network(vm)
       vm['properties']['networkProfile']['inputEndpoints'].collect do |n|
         {
           :name     => n['endpointName'],
@@ -82,7 +86,7 @@ module EmsRefresh::Parsers
       end
     end
 
-    def parse_vm_extensions(vm)
+    def process_vm_extensions(vm)
       vm['properties']['extensions'].collect do |ext|
         {
           :extension  => ext['extension'],
@@ -102,26 +106,20 @@ module EmsRefresh::Parsers
       log_header = "MIQ(#{self.class.name}.#{__method__})"
       $log.info("#{log_header} #{__method__}")
 
-      $log.info("VM")
-      $log.info(vm)
-
-      uid = vm['id']
+      uid = vm.fetch('id')
 
       new_result = {
-        :type            => vm['type'],
-        :uid_ems         => vm['id'],
-        :ems_ref         => vm['id'],
-        :name            => vm['name'],
+        :type            => vm.fetch('type'),
+        :uid_ems         => uid,
+        :ems_ref         => uid,
+        :name            => vm.fetch('name'),
         :vendor          => "Microsoft",
-        :raw_power_state => vm['instanceView']['powerState'],
-        :hardware        => parse_vm_hardware(vm),
-        :storage         => parse_vm_storage(vm),
-        :network         => parse_vm_network(vm),
-        :extensions      => parse_vm_extensions(vm)
+        :raw_power_state => vm.fetch('properties')['instanceView']['powerState'],
+        :hardware        => process_vm_hardware(vm),
+        :storage         => process_vm_storage(vm),
+        :network         => process_vm_network(vm),
+        :extensions      => process_vm_extensions(vm)
       }
-
-      $log.info("NEW_RESULT HASH")
-      $log.info(new_result)
 
       return uid, new_result
     end
