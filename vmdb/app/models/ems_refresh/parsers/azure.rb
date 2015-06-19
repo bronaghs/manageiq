@@ -101,7 +101,9 @@ module EmsRefresh::Parsers
     def parse_vm(vm)
       log_header = "MIQ(#{self.class.name}.#{__method__})"
       $log.info("#{log_header} #{__method__}")
-      $log.info(instance)
+
+      $log.info("VM")
+      $log.info(vm)
 
       uid = vm['id']
 
@@ -117,6 +119,9 @@ module EmsRefresh::Parsers
         :network         => parse_vm_network(vm),
         :extensions      => parse_vm_extensions(vm)
       }
+
+      $log.info("NEW_RESULT HASH")
+      $log.info(new_result)
 
       return uid, new_result
     end
