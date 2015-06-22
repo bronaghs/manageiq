@@ -8,7 +8,7 @@ module EmsRefresh::Parsers
 
     def initialize(ems, options = nil)
       @ems        = ems
-      @connection = ems.connect(options)
+      @connection = ems.connect
       @options    = options || {}
       @data       = {}
       @data_index = {}
