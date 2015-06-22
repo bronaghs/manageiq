@@ -8,7 +8,7 @@ module EmsRefresh::Parsers
 
     def initialize(ems, options = nil)
       @ems        = ems
-      @connection = ems.connect
+      @connection = ems.connect(options)
       @options    = options || {}
       @data       = {}
       @data_index = {}
@@ -16,11 +16,12 @@ module EmsRefresh::Parsers
 
     def ems_inv_to_hashes
       log_header = "MIQ(#{self.class.name}.#{__method__}) Collecting data for EMS name: [#{@ems.name}] id: [#{@ems.id}]"
+
       $log.info("#{log_header}...")
-
       get_vms
-
       $log.info("#{log_header}...Complete")
+
+      @data
     end
 
     private
