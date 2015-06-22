@@ -110,7 +110,7 @@ module EmsRefresh::Parsers
       uid = vm.fetch('id')
 
       new_result = {
-        :type            => vm.fetch('type'),
+        :type            => 'VmAzure',
         :uid_ems         => uid,
         :ems_ref         => uid,
         :name            => vm.fetch('name'),
