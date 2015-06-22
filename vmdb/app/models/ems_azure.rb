@@ -23,9 +23,9 @@ class EmsAzure < EmsCloud
     $log.info("#{__FILE__} #{__method__}")
     raise "no credentials defined" if self.missing_credentials?(options[:auth_type])
 
-    clientid  = options[:user]     || self.authentication_userid(options[:auth_type])
-    clientkey = options[:pass]     || self.authentication_password(options[:auth_type])
-    tenantid  = options[:hostname] || self.hostname
+    clientid  = options[:user] || options[:client_id]  || self.authentication_userid(options[:auth_type])
+    clientkey = options[:pass] || options[:client_key] || self.authentication_password(options[:auth_type])
+    tenantid  = options[:hostname] || options[:tenant_id] || self.hostname
 
     self.class.raw_connect(clientid, clientkey, tenantid)
   end
