@@ -41,7 +41,7 @@ module EmsRefresh::Parsers
 
       collection.each do |item|
         uid, new_result = yield(item)
-        @data[key] << item
+        @data[key] << new_result
         @data_index.store_path(key, uid, new_result)
       end
     end
@@ -105,23 +105,20 @@ module EmsRefresh::Parsers
     #
     def parse_vm(vm)
       log_header = "MIQ(#{self.class.name}.#{__method__})"
-      $log.info("#{log_header} #{__method__}")
 
-      uid = vm.fetch('id')
+      uid = vm.fetch_path('properties', 'hardwareProfile', 'deploymentId')
 
       new_result = {
         :type            => 'VmAzure',
         :uid_ems         => uid,
         :ems_ref         => uid,
-        :name            => vm.fetch('name'),
+        :name            => vm.fetch_path('name'),
         :vendor          => "Microsoft",
-        :raw_power_state => vm.fetch('properties')['instanceView']['powerState'],
-        :hardware        => process_vm_hardware(vm),
-        :storage         => process_vm_storage(vm),
-        :network         => process_vm_network(vm),
-        :extensions      => process_vm_extensions(vm)
+        :raw_power_state => vm.fetch_path('properties', 'instanceView', 'powerState'),
+        # :hardware        => [], #process_vm_hardware(vm),
+        # :storage         => [], #process_vm_storage(vm),
+        # :network         => process_vm_network(vm),
       }
-
       return uid, new_result
     end
   end
