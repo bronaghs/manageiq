@@ -62,18 +62,11 @@ module EmsRefresh::Parsers
     end
 
     def process_vm_storage(vm)
-      storage = vm['properties']['storageProfile']['operatingSystemDisk']
+      storage = vm.fetch_path('properties', 'storageProfile', 'operatingSystemDisk')
 
       {
-        :disk_name        => storage['diskName'],
-        :caching          => storage['caching'],
-        :operating_system => storage['operatingSystem'],
-        :io_type          => storage['ioType'],
-        :image_name       => storage['sourceImageName'],
-        :vhd_uri          => storage['vhdUri'],
-        :id               => storage['storageAccount']['id'],
-        :name             => storage['storageAccount']['name'],
-        :type             => storage['storageAccount']['type']
+        :name       => storage['storageAccount']['name'],
+        :store_type => storage['storageAccount']['type']
       }
     end
 
@@ -115,8 +108,8 @@ module EmsRefresh::Parsers
         :name            => vm.fetch_path('name'),
         :vendor          => "Microsoft",
         :raw_power_state => vm.fetch_path('properties', 'instanceView', 'powerState'),
+        :storage         => process_vm_storage(vm),
         # :hardware        => [], #process_vm_hardware(vm),
-        # :storage         => [], #process_vm_storage(vm),
         # :network         => process_vm_network(vm),
       }
       return uid, new_result
