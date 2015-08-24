@@ -116,7 +116,6 @@ module EmsRefresh
           :hardware         => {
             :disks    => [], # Filled in later conditionally on flavor
             :networks => [], # Filled in later conditionally on what's available
-            # Do we need to set the guest_os??
           },
         }
         new_result[:availability_zone] = fetch_az(az) unless az.nil?
@@ -140,7 +139,7 @@ module EmsRefresh
 
       def guest_os(vm)
         image_reference = vm.fetch_path('properties', 'storageProfile', 'imageReference')
-        image_reference['offer'] + " "  + image_reference['sku'].gsub('-', ' ')
+        image_reference['offer'] + " " + image_reference['sku'].gsub('-', ' ')
       end
 
       def populate_hardware_hash_with_disks(hardware_disks_array, vm)

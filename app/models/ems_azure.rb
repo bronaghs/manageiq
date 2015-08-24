@@ -30,8 +30,16 @@ class EmsAzure < EmsCloud
     self.class.raw_connect(clientid, clientkey, tenant_id)
   end
 
-  def verify_credentials(_auth_type = nil, _options = {})
-    # TODO
+  def verify_credentials(*)
+    begin
+      connect
+    rescue RestClient::Unauthorized
+      raise MiqException::MiqHostError, "Incorrect credentials - check your Azure Client ID and Client Key"
+    rescue StandardError => err
+      $log.error("Error Class=#{err.class.name}, Message=#{err.message}")
+      raise MiqException::MiqHostError, "Unexpected response returned from system, see log for details"
+    end
+
     true
   end
 end
