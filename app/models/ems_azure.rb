@@ -32,7 +32,6 @@ class EmsAzure < EmsCloud
   end
 
   def verify_credentials(*)
-    puts "#{__method__}"
     begin
       connect
     rescue RestClient::Unauthorized
@@ -43,5 +42,32 @@ class EmsAzure < EmsCloud
     end
 
     true
+  end
+
+  def vm_start(vm, _options = {})
+    group = vm.uid_ems.split('\\').first
+    vmm = ::Azure::Armrest::VirtualMachineService.new(vm.provider_object)
+    vmm.start(vm.name, group)
+    vmm.update_attributes!(:raw_power_state => "VM starting")
+  rescue => err
+    _log.error "vm=[#{vm.name}], error: #{err}"
+  end
+
+  def vm_stop(vm, _options = {})
+    group = vm.uid_ems.split('\\').first
+    vmm = ::Azure::Armrest::VirtualMachineService.new(vm.provider_object)
+    vmm.stop(vm.name, group)
+    vmm.update_attributes!(:raw_power_state => "VM stopping")
+  rescue => err
+    _log.error "vm=[#{vm.name}], error: #{err}"
+  end
+
+  def vm_restart(vm, _options = {})
+    group = vm.uid_ems.split('\\').first
+    vmm = ::Azure::Armrest::VirtualMachineService.new(vm.provider_object)
+    vm.restart(vm.name, group)
+    vmm.update_attributes!(:raw_power_state => "VM starting")
+  rescue => err
+    _log.error "vm=[#{vm.name}], error: #{err}"
   end
 end
