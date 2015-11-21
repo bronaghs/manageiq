@@ -392,8 +392,8 @@ module ManageIQ::Providers::Microsoft
                  when "HostDrive" then process_vm_physical_dvd_drive(dvdprops)
                  when "ISOImage"  then process_iso_image(vm)
                  end
+      devices.flatten.compact
 
-      devices.compact
     end
 
     def process_vm_physical_dvd_drive(dvd)
@@ -414,22 +414,24 @@ module ManageIQ::Providers::Microsoft
     end
 
     def process_iso_image(vm)
-      path = vm[:DVDs][:Props][:SharePath]
-      size = vm[:DVDs][:Props][:Size]
-      uid  = vm[:DVDs][:Props][:ID]
-      name = vm[:DVDs][:Props][:Name]
+      mounted_isos = []
+      mounted_isos << vm[:DVDs].collect do |dvd|
+        path = dvd[:Props][:SharePath]
+        size = dvd[:Props][:Size]
+        uid  = dvd[:Props][:ID]
+        name = dvd[:Props][:Name]
 
-      new_result = {
-        :size            => size / 1.megabyte,
-        :device_type     => 'cdrom',  # TODO: add DVD to model
-        :present         => true,
-        :controller_type => 'IDE',
-        :mode            => 'persistent',
-        :filename        => path,
-        :uid_ems         => uid,
-        :device_name     => name,
-      }
-      new_result
+        {
+          :size            => size / 1.megabyte,
+          :device_type     => 'cdrom', # TODO: add DVD to model
+          :present         => true,
+          :controller_type => 'IDE',
+          :mode            => 'persistent',
+          :filename        => path,
+          :uid_ems         => uid,
+          :device_name     => name,
+        }
+      end
     end
 
     def process_vm_storages(properties)

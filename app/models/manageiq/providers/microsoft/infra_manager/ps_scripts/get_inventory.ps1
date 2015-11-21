@@ -16,7 +16,7 @@ function get_vms{
     $vm_hash["Networks"] = $networks.KvpMap["NetworkAddressIPv4"]
    }
   }
-  $dvds = Get-SCVirtualDVDDrive -VM $_ | Select-Object -ExpandProperty "ISO"
+  $dvds = @(Get-SCVirtualDVDDrive -VM $_ | Select-Object -ExpandProperty "ISO")
   $vm_hash["DVDs"] = $dvds
   $vmnet = Get-SCVirtualNetworkAdapter -VM $_ | Select-Object VMNetwork
   $vm_hash["vmnet"] = $vmnet
@@ -33,7 +33,7 @@ function get_images{
   $i_hash = @{}
   $id = $_.ID
   $i_hash["Properties"] = $_
-  $dvds = Get-SCVirtualDVDDrive -VMTemplate $_ | Select-Object -ExpandProperty "ISO"
+  $dvds = @(Get-SCVirtualDVDDrive -VMTemplate $_ | Select-Object -ExpandProperty "ISO")
   $i_hash["DVDs"] = $dvds
   $vmnet = Get-SCVirtualNetworkAdapter -VMTemplate $_ | Select-Object VMNetwork
   $i_hash["vmnet"] = $vmnet
