@@ -126,20 +126,27 @@ class EmsEvent < EventStream
   end
 
   def self.process_object_in_event!(klass, event, options = {})
+    _log.info("#{__FILE__} #{__method__} klass #{klass} event: #{event.inspect} options: #{options.inspect}")
     prefix      = options[:prefix]
     key_prefix  = options[:key_prefix] || klass.name.underscore
     id_key      = options[:id_key] || "#{prefix}#{key_prefix}_id".to_sym
     ems_ref_key = options[:ems_ref_key] || "#{prefix}#{key_prefix}_ems_ref".to_sym
     name_key    = options[:name_key] || "#{prefix}#{key_prefix}_name".to_sym
 
+    log.info("#{__FILE__} #{__method__} prefix: #{prefix}  key_prefix: #{key_prefix} id_key: #{id_key} ems_ref_key: #{ems_ref_key} name_key: #{name_key}")
+
     if event[id_key].nil?
       ems_ref = event[ems_ref_key]
+      log.info("#{__FILE__} #{__method__} ems_ref: #{ems_ref}")
       object  = klass.base_class.find_by(:ems_ref => ems_ref, :ems_id => event[:ems_id]) unless ems_ref.nil?
+            log.info("#{__FILE__} #{__method__} object: #{object.inspect}")
+
 
       unless object.nil?
         event[id_key]     = object.id
         event[name_key] ||= object.name
       end
+      log.info("#{__FILE__} #{__method__} event #{event.inspect}")
     end
   end
 
